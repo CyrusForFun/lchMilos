@@ -12,8 +12,8 @@
             align-items: center;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
-            overflow: hidden; /* 禁止滾動 */
-            height: 100vh; /* 確保頁面高度適配 */
+            overflow: hidden;
+            height: 100vh;
         }
         #navbar {
             display: flex;
@@ -38,6 +38,11 @@
         }
         #navbar button:hover:not(.disabled) {
             background-color: #45a049;
+        }
+        h1 {
+            margin: 20px 0;
+            color: #333;
+            font-size: 24px;
         }
         canvas {
             background-color: #222;
@@ -79,51 +84,37 @@
     </style>
 </head>
 <body>
-    <!-- 頂部導航欄 -->
+    <h1>貪食蛇❌ 米食女✅</h1>
     <div id="navbar">
         <button id="game1Button">米食女</button>
         <button id="game2Button" class="disabled">得閑再算</button>
     </div>
-
-    <!-- 遊戲畫布 -->
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-    <!-- 遊戲開始/結束彈窗 -->
     <div id="gameModal">
         <p id="modalMessage">點擊下面按鈕開始遊戲！</p>
         <button id="modalButton">開始遊戲</button>
     </div>
-
     <script>
-        // 禁止整個頁面滾動
         document.body.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
-
-        // 初始化畫布
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const boxSize = 25; // 單位大小
-        const canvasSize = 400; // 畫布大小
+        const boxSize = 25;
+        const canvasSize = 400;
         const rows = canvasSize / boxSize;
         const cols = canvasSize / boxSize;
-
-        // 遊戲狀態
-        let snake = [{ x: 10, y: 10 }]; // 初始蛇的位置
-        let snakeDirection = "RIGHT"; // 初始方向
-        let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) }; // 隨機生成食物
-        let score = 0; // 分數
-        let gameInterval = null; // 遊戲循環控制
-        let speed = 150; // 起始速度 (毫秒)
-        const minSpeed = 50; // 最低速度限制
-
-        // 監聽鍵盤事件
+        let snake = [{ x: 10, y: 10 }];
+        let snakeDirection = "RIGHT";
+        let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+        let score = 0;
+        let gameInterval = null;
+        let speed = 150;
+        const minSpeed = 50;
         document.addEventListener("keydown", (event) => {
             if (event.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
             if (event.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
             if (event.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
             if (event.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
         });
-
-        // 監聽手機滑動手勢
         let touchStartX, touchStartY, touchEndX, touchEndY;
         document.addEventListener("touchstart", (e) => {
             touchStartX = e.touches[0].clientX;
@@ -134,8 +125,6 @@
             touchEndY = e.changedTouches[0].clientY;
             handleSwipe();
         });
-
-        // 處理滑動方向
         function handleSwipe() {
             const diffX = touchEndX - touchStartX;
             const diffY = touchEndY - touchStartY;
@@ -147,17 +136,12 @@
                 if (diffY < 0 && snakeDirection !== "DOWN") snakeDirection = "UP";
             }
         }
-
-        // 更新遊戲邏輯
         function updateGame() {
-            // 計算新蛇頭的位置
             let newHead = { ...snake[0] };
             if (snakeDirection === "UP") newHead.y -= 1;
             if (snakeDirection === "DOWN") newHead.y += 1;
             if (snakeDirection === "LEFT") newHead.x -= 1;
             if (snakeDirection === "RIGHT") newHead.x += 1;
-
-            // 檢查是否撞牆或撞到自己
             if (
                 newHead.x < 0 || newHead.x >= cols ||
                 newHead.y < 0 || newHead.y >= rows ||
@@ -166,52 +150,36 @@
                 endGame();
                 return;
             }
-
-            // 添加新蛇頭
             snake.unshift(newHead);
-
-            // 檢查是否吃到食物
             if (newHead.x === food.x && newHead.y === food.y) {
                 score++;
-                generateFood(); // 吃到食物後生成新的食物
-                increaseSpeed(); // 提升速度
+                generateFood();
+                increaseSpeed();
             } else {
-                snake.pop(); // 如果沒吃到食物，移除蛇尾
+                snake.pop();
             }
         }
-
-        // 隨機生成食物
         function generateFood() {
             food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
-            // 確保食物不生成在蛇身上
             if (snake.some((segment) => segment.x === food.x && segment.y === food.y)) {
                 generateFood();
             }
         }
-
-        // 提升速度
         function increaseSpeed() {
             if (speed > minSpeed) {
-                speed -= 7.5; // 每次加分減少 5ms
+                speed -= 7.5;
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, speed);
             }
         }
-
-        // 遊戲結束
         function endGame() {
-            clearInterval(gameInterval); // 停止遊戲
+            clearInterval(gameInterval);
             document.getElementById("modalMessage").textContent = `你嘅分數: ${score}`;
             document.getElementById("modalButton").textContent = "再來一局";
             document.getElementById("gameModal").style.display = "flex";
         }
-
-        // 繪製遊戲畫面
         function drawGame() {
-            // 清空畫布
             ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-            // 繪製蛇
             snake.forEach((segment) => {
                 ctx.fillStyle = "#4CAF50";
                 ctx.font = "20px Arial";
@@ -219,40 +187,29 @@
                 ctx.textBaseline = "middle";
                 ctx.fillText("米", segment.x * boxSize + boxSize / 2, segment.y * boxSize + boxSize / 2);
             });
-
-            // 繪製食物
             ctx.fillStyle = "#FF0000";
             ctx.font = "20px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("女", food.x * boxSize + boxSize / 2, food.y * boxSize + boxSize / 2);
-
-            // 繪製分數
             ctx.fillStyle = "#FFF";
             ctx.font = "16px Arial";
             ctx.fillText("得分: " + score, 40, 20);
         }
-
-        // 遊戲主循環
         function gameLoop() {
             updateGame();
             drawGame();
         }
-
-        // 開始/再來一局按鈕
         document.getElementById("modalButton").addEventListener("click", () => {
-            // 重置遊戲狀態
             snake = [{ x: 10, y: 10 }];
             snakeDirection = "RIGHT";
             score = 0;
-            speed = 150; // 重置速度
+            speed = 150;
             generateFood();
             document.getElementById("gameModal").style.display = "none";
             clearInterval(gameInterval);
             gameInterval = setInterval(gameLoop, speed);
         });
-
-        // 初始顯示彈窗
         document.getElementById("gameModal").style.display = "flex";
     </script>
 </body>
