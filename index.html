@@ -32,11 +32,7 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #navbar button.disabled {
-            background-color: #999;
-            cursor: not-allowed;
-        }
-        #navbar button:hover:not(.disabled) {
+        #navbar button:hover {
             background-color: #45a049;
         }
         h1 {
@@ -49,7 +45,19 @@
             background-color: #222;
             display: block;
             border: 1px solid #555;
-            margin-top: 20px;
+            margin-top: 10px;
+        }
+        .view {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+        }
+        .view.active {
+            display: flex;
         }
         #endModal {
             display: none;
@@ -60,27 +68,14 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
             color: white;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
             z-index: 1000;
         }
         #endModal p {
             font-size: 20px;
-            margin: 5px 0;
-        }
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
+            margin: 10px 0;
         }
         input {
             padding: 10px;
@@ -89,6 +84,32 @@
             border-radius: 5px;
             margin-bottom: 10px;
         }
+        #score {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #333;
+        }
+        #startGameButton {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #startGameButton:hover {
+            background-color: #45a049;
+        }
+        #contactView a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        #contactView a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -96,24 +117,13 @@
         <button onclick="switchView('gameView')">米食女</button>
         <button onclick="switchView('contactView')">聯絡米露</button>
     </div>
-    <h1>貪食蛇❌ 米食女✅</h1>
-    <div id="gameView" class="view active">
+
+    <!-- 遊戲畫面 -->
+    <div id="gameView" class="view">
         <h1>貪食蛇❌ 米食女✅</h1>
+        <p id="score">分數：0</p>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="gameModal">
-        <p>請輸入姓名：</p>
-        <input type="text" id="playerName" placeholder="輸入你的名字" />
-        <button id="startButton">開始遊戲</button>
-    </div>
-    <div id="endModal">
-        <p id="playerScoreTitle"></p>
-        <p id="playerScore"></p>
-        <p id="playerHighScoreTitle"></p>
-        <p id="playerHighScore"></p>
-        <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
-        <p id="systemRecord">37 (11-4-2025 16:49)</p>
-        <button id="restartButton">再來一局</button>
-    </div>
+        <button id="startGameButton" onclick="startGame()">開始遊戲</button>
     </div>
 
     <!-- 聯絡畫面 -->
@@ -127,148 +137,52 @@
             </a>
         </p>
     </div>
+
+    <!-- 遊戲結束彈窗 -->
+    <div id="endModal">
+        <p id="playerScore"></p>
+        <p id="playerHighScore"></p>
+        <p>系統最高分數：37 (11-4-2025 21:49)</p>
+        <button onclick="closeModal()">關閉</button>
+    </div>
+
     <script>
-        document.body.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const boxSize = 25;
-        const canvasSize = 400;
-        const rows = canvasSize / boxSize;
-        const cols = canvasSize / boxSize;
+        const rows = canvas.width / boxSize;
+        const cols = canvas.height / boxSize;
+        const scoreElement = document.getElementById("score");
+        const endModal = document.getElementById("endModal");
+        const playerScoreText = document.getElementById("playerScore");
+        const playerHighScoreText = document.getElementById("playerHighScore");
+
         let snake = [{ x: 10, y: 10 }];
-        let snakeDirection = "RIGHT";
         let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+        let direction = "RIGHT";
         let score = 0;
+        let highScore = 0;
+        let speed = 150; // 初始速度（毫秒）
+        const minSpeed = 50; // 最低速度
         let gameInterval = null;
 
-        const initialSpeed = 150; // 初始速度
-        let speed = initialSpeed;
-        const minSpeed = 50;
-
-        let highScore = 0;
-        let highScoreTime = "";
-        let playerName = "";
-
-        document.getElementById("startButton").addEventListener("click", () => {
-            const inputName = document.getElementById("playerName").value.trim();
-            if (inputName === "") {
-                alert("請輸入你的名字！");
-                return;
-            }
-            playerName = inputName;
-            document.getElementById("gameModal").style.display = "none";
-            startGame();
-        });
-
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
-            if (event.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
-            if (event.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
-            if (event.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
-        });
-
-        let touchStartX, touchStartY, touchEndX, touchEndY;
-        document.addEventListener("touchstart", (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-        document.addEventListener("touchend", (e) => {
-            touchEndX = e.changedTouches[0].clientX;
-            touchEndY = e.changedTouches[0].clientY;
-            handleSwipe();
-        });
-
-        function handleSwipe() {
-            const diffX = touchEndX - touchStartX;
-            const diffY = touchEndY - touchStartY;
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 0 && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
-                if (diffX < 0 && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
-            } else {
-                if (diffY > 0 && snakeDirection !== "UP") snakeDirection = "DOWN";
-                if (diffY < 0 && snakeDirection !== "DOWN") snakeDirection = "UP";
-            }
+        // 切換視圖
+        function switchView(viewId) {
+            document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+            document.getElementById(viewId).classList.add("active");
         }
 
-        function updateGame() {
-            let newHead = { ...snake[0] };
-            if (snakeDirection === "UP") newHead.y -= 1;
-            if (snakeDirection === "DOWN") newHead.y += 1;
-            if (snakeDirection === "LEFT") newHead.x -= 1;
-            if (snakeDirection === "RIGHT") newHead.x += 1;
-
-            if (
-                newHead.x < 0 || newHead.x >= cols ||
-                newHead.y < 0 || newHead.y >= rows ||
-                snake.some((segment) => segment.x === newHead.x && segment.y === newHead.y)
-            ) {
-                endGame();
-                return;
-            }
-
-            snake.unshift(newHead);
-
-            if (newHead.x === food.x && newHead.y === food.y) {
-                score++;
-                generateFood();
-                increaseSpeed();
-            } else {
-                snake.pop();
-            }
-        }
-
-        function generateFood() {
-            food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
-            if (snake.some((segment) => segment.x === food.x && segment.y === food.y)) {
-                generateFood();
-            }
-        }
-
-        function increaseSpeed() {
-            if (speed > minSpeed) {
-                speed -= 7.5;
-                clearInterval(gameInterval);
-                gameInterval = setInterval(gameLoop, speed);
-            }
-        }
-
-        function endGame() {
+        // 遊戲邏輯
+        function startGame() {
+            snake = [{ x: 10, y: 10 }];
+            direction = "RIGHT";
+            score = 0;
+            speed = 150; // 重置速度
+            updateScore();
+            generateFood();
+            endModal.style.display = "none";
             clearInterval(gameInterval);
-            const currentTime = new Date();
-            const formattedTime = `${currentTime.getDate()}-${currentTime.getMonth() + 1}-${currentTime.getFullYear()} ${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, "0")}`;
-
-            if (score > highScore) {
-                highScore = score;
-                highScoreTime = formattedTime;
-            }
-
-            document.getElementById("playerScoreTitle").textContent = `${playerName}分數：`;
-            document.getElementById("playerScore").textContent = score;
-            document.getElementById("playerHighScoreTitle").textContent = `${playerName}嘅最高記錄：`;
-            document.getElementById("playerHighScore").textContent = `${highScore} (${highScoreTime})`;
-            document.getElementById("endModal").style.display = "flex";
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, canvasSize, canvasSize);
-
-            snake.forEach((segment) => {
-                ctx.fillStyle = "#4CAF50";
-                ctx.font = "20px Arial";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("米", segment.x * boxSize + boxSize / 2, segment.y * boxSize + boxSize / 2);
-            });
-
-            ctx.fillStyle = "#FF0000";
-            ctx.font = "20px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("女", food.x * boxSize + boxSize / 2, food.y * boxSize + boxSize / 2);
-
-            ctx.fillStyle = "#FFF";
-            ctx.font = "16px Arial";
-            ctx.fillText("得分: " + score, 40, 20);
+            gameInterval = setInterval(gameLoop, speed);
         }
 
         function gameLoop() {
@@ -276,18 +190,92 @@
             drawGame();
         }
 
-        function startGame() {
-            score = 0;
-            snake = [{ x: 10, y: 10 }];
-            snakeDirection = "RIGHT";
-            speed = initialSpeed; // 重置速度
-            generateFood();
-            gameInterval = setInterval(gameLoop, speed);
+        function updateGame() {
+            const head = { ...snake[0] };
+            if (direction === "UP") head.y -= 1;
+            if (direction === "DOWN") head.y += 1;
+            if (direction === "LEFT") head.x -= 1;
+            if (direction === "RIGHT") head.x += 1;
+
+            // 碰撞檢測
+            if (
+                head.x < 0 || head.x >= cols ||
+                head.y < 0 || head.y >= rows ||
+                snake.some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                endGame();
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                updateScore();
+                generateFood();
+                increaseSpeed();
+            } else {
+                snake.pop();
+            }
         }
 
-        document.getElementById("restartButton").addEventListener("click", () => {
-            document.getElementById("endModal").style.display = "none";
-            startGame();
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 畫蛇（米）
+            snake.forEach(segment => {
+                ctx.fillStyle = "#4CAF50";
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("米", segment.x * boxSize + boxSize / 2, segment.y * boxSize + boxSize / 2);
+            });
+
+            // 畫食物（女）
+            ctx.fillStyle = "#FF0000";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("女", food.x * boxSize + boxSize / 2, food.y * boxSize + boxSize / 2);
+        }
+
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * cols),
+                y: Math.floor(Math.random() * rows)
+            };
+        }
+
+        function updateScore() {
+            scoreElement.textContent = `分數：${score}`;
+        }
+
+        function increaseSpeed() {
+            if (speed > minSpeed) {
+                speed -= 7.5; // 每次吃到食物減少速度
+                clearInterval(gameInterval);
+                gameInterval = setInterval(gameLoop, speed);
+            }
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            if (score > highScore) highScore = score;
+            playerScoreText.textContent = `你的分數：${score}`;
+            playerHighScoreText.textContent = `你的最高分數：${highScore}`;
+            endModal.style.display = "flex";
+        }
+
+        function closeModal() {
+            endModal.style.display = "none";
+        }
+
+        // 鍵盤控制
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+            if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+            if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+            if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
         });
     </script>
 </body>
