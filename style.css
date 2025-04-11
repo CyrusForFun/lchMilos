@@ -1,66 +1,141 @@
-/* 全局樣式 */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    overflow: hidden;
-    height: 100vh;
+// 視圖切換邏輯
+function switchView(viewId) {
+    const views = document.querySelectorAll('.view');
+    views.forEach(view => view.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+
+    if (viewId === 'snakeGame') {
+        document.getElementById('gameModal').style.display = 'flex';
+    } else {
+        stopGame();
+    }
 }
 
-/* 視圖容器 */
-.view {
-    display: none;
-    height: 100%;
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+// 貪食蛇遊戲邏輯
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const boxSize = 25;
+const rows = canvas.width / boxSize;
+const cols = canvas.height / boxSize;
+
+let snake = [{ x: 10, y: 10 }];
+let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+let direction = "RIGHT";
+let gameInterval = null;
+let score = 0;
+let highScore = 0;
+let playerName = "";
+const initialSpeed = 150;
+let speed = initialSpeed;
+const minSpeed = 50;
+
+// 開始遊戲按鈕
+document.getElementById("startButton").addEventListener("click", () => {
+    const inputName = document.getElementById("playerName").value.trim();
+    if (inputName === "") {
+        alert("請輸入你的名字！");
+        return;
+    }
+    playerName = inputName;
+    document.getElementById("gameModal").style.display = "none";
+    startGame();
+});
+
+// 監聽鍵盤操作
+document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+    if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+    if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+});
+
+// 繪製遊戲
+function drawGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    snake.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? "#4CAF50" : "#8BC34A";
+        ctx.fillRect(segment.x * boxSize, segment.y * boxSize, boxSize, boxSize);
+    });
+
+    ctx.fillStyle = "#FF0000";
+    ctx.fillRect(food.x * boxSize, food.y * boxSize, boxSize, boxSize);
 }
 
-.view.active {
-    display: flex;
+// 更新遊戲邏輯
+function updateGame() {
+    const head = { ...snake[0] };
+
+    if (direction === "UP") head.y -= 1;
+    if (direction === "DOWN") head.y += 1;
+    if (direction === "LEFT") head.x -= 1;
+    if (direction === "RIGHT") head.x += 1;
+
+    if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows ||
+        snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        endGame();
+        return;
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+        increaseSpeed();
+    } else {
+        snake.pop();
+    }
 }
 
-/* 導覽列樣式 */
-#navbar {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    background-color: #333;
-    padding: 10px 0;
+// 遊戲加速
+function increaseSpeed() {
+    if (speed > minSpeed) {
+        speed -= 7.5; // 每次吃到食物減少速度
+        clearInterval(gameInterval);
+        gameInterval = setInterval(gameLoop, speed);
+    }
 }
 
-#navbar button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: white;
-    background-color: #4CAF50;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+// 遊戲循環
+function gameLoop() {
+    updateGame();
+    drawGame();
 }
 
-#navbar button.disabled {
-    background-color: #999;
-    cursor: not-allowed;
+// 開始遊戲
+function startGame() {
+    score = 0;
+    speed = initialSpeed; // 重置速度
+    snake = [{ x: 10, y: 10 }];
+    direction = "RIGHT";
+    food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+    gameInterval = setInterval(gameLoop, speed);
 }
 
-#navbar button:hover:not(.disabled) {
-    background-color: #45a049;
+// 結束遊戲
+function endGame() {
+    clearInterval(gameInterval);
+    gameInterval = null;
+
+    if (score > highScore) {
+        highScore = score;
+    }
+
+    document.getElementById("playerScoreTitle").textContent = `${playerName}分數：`;
+    document.getElementById("playerScore").textContent = score;
+    document.getElementById("playerHighScoreTitle").textContent = `${playerName}的最高記錄：`;
+    document.getElementById("playerHighScore").textContent = highScore;
+    document.getElementById("endModal").style.display = "flex";
 }
 
-/* 標題樣式 */
-h1 {
-    margin: 20px 0;
-    color: #333;
-    font-size: 24px;
-    text-align: center;
+// 停止遊戲
+function stopGame() {
+    clearInterval(gameInterval);
+    gameInterval = null;
 }
 
-/* 畫布樣式 */
-canvas {
-    background-color: #222;
-    display: block;
-    border: 1px solid #555;
-}
+document.getElementById("restartButton").addEventListener("click", () => {
+    document.getElementById("endModal").style.display = "none";
+    startGame();
+});
