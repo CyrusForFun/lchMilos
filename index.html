@@ -51,8 +51,8 @@
             border: 1px solid #555;
             margin-top: 20px;
         }
-        #gameModal {
-            display: flex;
+        #endModal {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -65,7 +65,7 @@
             align-items: center;
             z-index: 1000;
         }
-        #gameModal p {
+        #endModal p {
             font-size: 20px;
             margin: 10px 0;
         }
@@ -82,6 +82,13 @@
         button:hover {
             background-color: #45a049;
         }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -92,8 +99,15 @@
     <h1>貪食蛇❌ 米食女✅</h1>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="gameModal">
-        <p id="modalMessage">點擊下面按鈕開始遊戲！</p>
-        <button id="modalButton">開始遊戲</button>
+        <p>請輸入姓名：</p>
+        <input type="text" id="playerName" placeholder="輸入你的名字" />
+        <button id="startButton">開始遊戲</button>
+    </div>
+    <div id="endModal">
+        <p id="currentScore"></p>
+        <p id="highScore"></p>
+        <p id="systemRecord">系統最高 (男同俱樂部某成員)嘅記錄：29 (11-4-2025 16:49)</p>
+        <button id="restartButton">再來一局</button>
     </div>
     <script>
         document.body.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
@@ -110,12 +124,29 @@
         let gameInterval = null;
         let speed = 150;
         const minSpeed = 50;
+
+        let highScore = 0;
+        let highScoreTime = "";
+        let playerName = "";
+
+        document.getElementById("startButton").addEventListener("click", () => {
+            const inputName = document.getElementById("playerName").value.trim();
+            if (inputName === "") {
+                alert("請輸入你的名字！");
+                return;
+            }
+            playerName = inputName;
+            document.getElementById("gameModal").style.display = "none";
+            startGame();
+        });
+
         document.addEventListener("keydown", (event) => {
             if (event.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
             if (event.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
             if (event.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
             if (event.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
         });
+
         let touchStartX, touchStartY, touchEndX, touchEndY;
         document.addEventListener("touchstart", (e) => {
             touchStartX = e.touches[0].clientX;
@@ -126,6 +157,7 @@
             touchEndY = e.changedTouches[0].clientY;
             handleSwipe();
         });
+
         function handleSwipe() {
             const diffX = touchEndX - touchStartX;
             const diffY = touchEndY - touchStartY;
@@ -137,12 +169,14 @@
                 if (diffY < 0 && snakeDirection !== "DOWN") snakeDirection = "UP";
             }
         }
+
         function updateGame() {
             let newHead = { ...snake[0] };
             if (snakeDirection === "UP") newHead.y -= 1;
             if (snakeDirection === "DOWN") newHead.y += 1;
             if (snakeDirection === "LEFT") newHead.x -= 1;
             if (snakeDirection === "RIGHT") newHead.x += 1;
+
             if (
                 newHead.x < 0 || newHead.x >= cols ||
                 newHead.y < 0 || newHead.y >= rows ||
@@ -151,7 +185,9 @@
                 endGame();
                 return;
             }
+
             snake.unshift(newHead);
+
             if (newHead.x === food.x && newHead.y === food.y) {
                 score++;
                 generateFood();
@@ -160,12 +196,14 @@
                 snake.pop();
             }
         }
+
         function generateFood() {
             food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
             if (snake.some((segment) => segment.x === food.x && segment.y === food.y)) {
                 generateFood();
             }
         }
+
         function increaseSpeed() {
             if (speed > minSpeed) {
                 speed -= 7.5;
@@ -173,15 +211,25 @@
                 gameInterval = setInterval(gameLoop, speed);
             }
         }
+
         function endGame() {
             clearInterval(gameInterval);
-            document.getElementById("modalMessage").textContent = `你嘅分數: ${score}`;
-            document.getElementById("modalMessage").textContent = `Highest: 37`;
-            document.getElementById("modalButton").textContent = "再嚟";
-            document.getElementById("gameModal").style.display = "flex";
+            const currentTime = new Date();
+            const formattedTime = `${currentTime.getDate()}-${currentTime.getMonth() + 1}-${currentTime.getFullYear()} ${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, "0")}`;
+
+            if (score > highScore) {
+                highScore = score;
+                highScoreTime = formattedTime;
+            }
+
+            document.getElementById("currentScore").textContent = `${playerName}嘅分數：${score}`;
+            document.getElementById("highScore").textContent = `${playerName}嘅最高記錄：${highScore} (${highScoreTime})`;
+            document.getElementById("endModal").style.display = "flex";
         }
+
         function drawGame() {
             ctx.clearRect(0, 0, canvasSize, canvasSize);
+
             snake.forEach((segment) => {
                 ctx.fillStyle = "#4CAF50";
                 ctx.font = "20px Arial";
@@ -189,30 +237,35 @@
                 ctx.textBaseline = "middle";
                 ctx.fillText("米", segment.x * boxSize + boxSize / 2, segment.y * boxSize + boxSize / 2);
             });
+
             ctx.fillStyle = "#FF0000";
             ctx.font = "20px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("女", food.x * boxSize + boxSize / 2, food.y * boxSize + boxSize / 2);
+
             ctx.fillStyle = "#FFF";
             ctx.font = "16px Arial";
             ctx.fillText("得分: " + score, 40, 20);
         }
+
         function gameLoop() {
             updateGame();
             drawGame();
         }
-        document.getElementById("modalButton").addEventListener("click", () => {
+
+        function startGame() {
+            score = 0;
             snake = [{ x: 10, y: 10 }];
             snakeDirection = "RIGHT";
-            score = 0;
-            speed = 150;
             generateFood();
-            document.getElementById("gameModal").style.display = "none";
-            clearInterval(gameInterval);
             gameInterval = setInterval(gameLoop, speed);
+        }
+
+        document.getElementById("restartButton").addEventListener("click", () => {
+            document.getElementById("endModal").style.display = "none";
+            startGame();
         });
-        document.getElementById("gameModal").style.display = "flex";
     </script>
 </body>
 </html>
