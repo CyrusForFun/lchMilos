@@ -3,42 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>遊戲中心</title>
-    <link rel="stylesheet" href="style.css">
+    <title>貪食蛇遊戲 - 米食女</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+        #navbar {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            background-color: #333;
+            padding: 10px 0;
+        }
+        #navbar button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #navbar button.disabled {
+            background-color: #999;
+            cursor: not-allowed;
+        }
+        #navbar button:hover:not(.disabled) {
+            background-color: #45a049;
+        }
+        h1 {
+            margin: 20px 0;
+            color: #333;
+            font-size: 24px;
+            text-align: center;
+        }
+        canvas {
+            background-color: #222;
+            display: block;
+            border: 1px solid #555;
+            margin-top: 20px;
+        }
+        #endModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #endModal p {
+            font-size: 20px;
+            margin: 5px 0;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <!-- 導覽列 -->
     <div id="navbar">
-        <button onclick="switchView('mainMenu')">主畫面</button>
-        <button onclick="switchView('snakeGame')">貪食蛇 - 米食女</button>
+        <button id="game1Button">米食女</button>
+        <button id="game2Button" class="disabled">得閑再算</button>
     </div>
-
-    <!-- 主畫面 -->
-    <div id="mainMenu" class="view active">
-        <h1>米露游戲中心</h1>
-        <p>上面選擇你想玩的遊戲 (暫時得一樣) </p>
+    <h1>貪食蛇❌ 米食女✅</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="gameModal">
+        <p>請輸入姓名：</p>
+        <input type="text" id="playerName" placeholder="輸入你的名字" />
+        <button id="startButton">開始遊戲</button>
     </div>
-
-    <!-- 貪食蛇遊戲畫面 -->
-    <div id="snakeGame" class="view">
-        <h1>貪食蛇 - 米食女</h1>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div id="gameModal">
-            <p>請輸入姓名：</p>
-            <input type="text" id="playerName" placeholder="輸入你的名字" />
-            <button id="startButton">開始遊戲</button>
-        </div>
-        <div id="endModal">
-            <p id="playerScoreTitle"></p>
-            <p id="playerScore"></p>
-            <p id="playerHighScoreTitle"></p>
-            <p id="playerHighScore"></p>
-            <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
-            <p id="systemRecord">37 (11-4-2025 16:49)</p>
-            <button id="restartButton">再來一局</button>
-        </div>
+    <div id="endModal">
+        <p id="playerScoreTitle"></p>
+        <p id="playerScore"></p>
+        <p id="playerHighScoreTitle"></p>
+        <p id="playerHighScore"></p>
+        <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
+        <p id="systemRecord">37 (11-4-2025 16:49)</p>
+        <button id="restartButton">再來一局</button>
     </div>
+    <script>
+        document.body.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const boxSize = 25;
+        const canvasSize = 400;
+        const rows = canvasSize / boxSize;
+        const cols = canvasSize / boxSize;
+        let snake = [{ x: 10, y: 10 }];
+        let snakeDirection = "RIGHT";
+        let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+        let score = 0;
+        let gameInterval = null;
 
-    <script src="script.js"></script>
+        const initialSpeed = 150; // 初始速度
+        let speed = initialSpeed;
+        const minSpeed = 50;
+
+        let highScore = 0;
+        let highScoreTime = "";
+        let playerName = "";
+
+        document.getElementById("startButton").addEventListener("click", () => {
+            const inputName = document.getElementById("playerName").value.trim();
+            if (inputName === "") {
+                alert("請輸入你的名字！");
+                return;
+            }
+            playerName = inputName;
+            document.getElementById("gameModal").style.display = "none";
+            startGame();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowUp" && snakeDirection !== "DOWN") snakeDirection = "UP";
+            if (event.key === "ArrowDown" && snakeDirection !== "UP") snakeDirection = "DOWN";
+            if (event.key === "ArrowLeft" && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
+            if (event.key === "ArrowRight" && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
+        });
+
+        let touchStartX, touchStartY, touchEndX, touchEndY;
+        document.addEventListener("touchstart", (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+        document.addEventListener("touchend", (e) => {
+            touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 0 && snakeDirection !== "LEFT") snakeDirection = "RIGHT";
+                if (diffX < 0 && snakeDirection !== "RIGHT") snakeDirection = "LEFT";
+            } else {
+                if (diffY > 0 && snakeDirection !== "UP") snakeDirection = "DOWN";
+                if (diffY < 0 && snakeDirection !== "DOWN") snakeDirection = "UP";
+            }
+        }
+
+        function updateGame() {
+            let newHead = { ...snake[0] };
+            if (snakeDirection === "UP") newHead.y -= 1;
+            if (snakeDirection === "DOWN") newHead.y += 1;
+            if (snakeDirection === "LEFT") newHead.x -= 1;
+            if (snakeDirection === "RIGHT") newHead.x += 1;
+
+            if (
+                newHead.x < 0 || newHead.x >= cols ||
+                newHead.y < 0 || newHead.y >= rows ||
+                snake.some((segment) => segment.x === newHead.x && segment.y === newHead.y)
+            ) {
+                endGame();
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            if (newHead.x === food.x && newHead.y === food.y) {
+                score++;
+                generateFood();
+                increaseSpeed();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function generateFood() {
+            food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+            if (snake.some((segment) => segment.x === food.x && segment.y === food.y)) {
+                generateFood();
+            }
+        }
+
+        function increaseSpeed() {
+            if (speed > minSpeed) {
+                speed -= 7.5;
+                clearInterval(gameInterval);
+                gameInterval = setInterval(gameLoop, speed);
+            }
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            const currentTime = new Date();
+            const formattedTime = `${currentTime.getDate()}-${currentTime.getMonth() + 1}-${currentTime.getFullYear()} ${currentTime.getHours()}:${String(currentTime.getMinutes()).padStart(2, "0")}`;
+
+            if (score > highScore) {
+                highScore = score;
+                highScoreTime = formattedTime;
+            }
+
+            document.getElementById("playerScoreTitle").textContent = `${playerName}分數：`;
+            document.getElementById("playerScore").textContent = score;
+            document.getElementById("playerHighScoreTitle").textContent = `${playerName}嘅最高記錄：`;
+            document.getElementById("playerHighScore").textContent = `${highScore} (${highScoreTime})`;
+            document.getElementById("endModal").style.display = "flex";
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+
+            snake.forEach((segment) => {
+                ctx.fillStyle = "#4CAF50";
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("米", segment.x * boxSize + boxSize / 2, segment.y * boxSize + boxSize / 2);
+            });
+
+            ctx.fillStyle = "#FF0000";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("女", food.x * boxSize + boxSize / 2, food.y * boxSize + boxSize / 2);
+
+            ctx.fillStyle = "#FFF";
+            ctx.font = "16px Arial";
+            ctx.fillText("得分: " + score, 40, 20);
+        }
+
+        function gameLoop() {
+            updateGame();
+            drawGame();
+        }
+
+        function startGame() {
+            score = 0;
+            snake = [{ x: 10, y: 10 }];
+            snakeDirection = "RIGHT";
+            speed = initialSpeed; // 重置速度
+            generateFood();
+            gameInterval = setInterval(gameLoop, speed);
+        }
+
+        document.getElementById("restartButton").addEventListener("click", () => {
+            document.getElementById("endModal").style.display = "none";
+            startGame();
+        });
+    </script>
 </body>
 </html>
