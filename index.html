@@ -93,11 +93,13 @@
 </head>
 <body>
     <div id="navbar">
-        <button id="game1Button">米食女</button>
-        <button id="game2Button" class="disabled">得閑先再整</button>
+        <button onclick="switchView('gameView')">米食女</button>
+        <button onclick="switchView('contactView')">聯絡米露</button>
     </div>
     <h1>貪食蛇❌ 米食女✅</h1>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="gameView" class="view active">
+        <h1>貪食蛇❌ 米食女✅</h1>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
     <div id="gameModal">
         <p>請輸入姓名：</p>
         <input type="text" id="playerName" placeholder="輸入你的名字" />
@@ -111,6 +113,19 @@
         <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
         <p id="systemRecord">37 (11-4-2025 16:49)</p>
         <button id="restartButton">再來一局</button>
+    </div>
+    </div>
+
+    <!-- 聯絡畫面 -->
+    <div id="contactView" class="view">
+        <h1>歡迎聯絡米露</h1>
+        <p>電話號碼：9209xxxx</p>
+        <p>
+            Instagram: 
+            <a href="https://www.instagram.com/miles.lch?igsh=MWh1bWhlNnlpMmc5aQ==" target="_blank">
+                https://www.instagram.com/miles.lch?igsh=MWh1bWhlNnlpMmc5aQ==
+            </a>
+        </p>
     </div>
     <script>
         document.body.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
