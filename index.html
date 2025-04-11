@@ -67,7 +67,7 @@
         }
         #endModal p {
             font-size: 20px;
-            margin: 10px 0;
+            margin: 5px 0;
         }
         button {
             margin-top: 20px;
@@ -104,9 +104,12 @@
         <button id="startButton">開始遊戲</button>
     </div>
     <div id="endModal">
-        <p id="currentScore"></p>
-        <p id="highScore"></p>
-        <p id="systemRecord">系統最高 (男同俱樂部某成員)嘅記錄：29 (11-4-2025 16:49)</p>
+        <p id="playerScoreTitle"></p>
+        <p id="playerScore"></p>
+        <p id="playerHighScoreTitle"></p>
+        <p id="playerHighScore"></p>
+        <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
+        <p id="systemRecord">37 (11-4-2025 16:49)</p>
         <button id="restartButton">再來一局</button>
     </div>
     <script>
@@ -122,7 +125,9 @@
         let food = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
         let score = 0;
         let gameInterval = null;
-        let speed = 150;
+
+        const initialSpeed = 150; // 初始速度
+        let speed = initialSpeed;
         const minSpeed = 50;
 
         let highScore = 0;
@@ -222,8 +227,10 @@
                 highScoreTime = formattedTime;
             }
 
-            document.getElementById("currentScore").textContent = `${playerName}嘅分數：${score}`;
-            document.getElementById("highScore").textContent = `${playerName}嘅最高記錄：${highScore} (${highScoreTime})`;
+            document.getElementById("playerScoreTitle").textContent = `${playerName}分數：`;
+            document.getElementById("playerScore").textContent = score;
+            document.getElementById("playerHighScoreTitle").textContent = `${playerName}嘅最高記錄：`;
+            document.getElementById("playerHighScore").textContent = `${highScore} (${highScoreTime})`;
             document.getElementById("endModal").style.display = "flex";
         }
 
@@ -258,6 +265,7 @@
             score = 0;
             snake = [{ x: 10, y: 10 }];
             snakeDirection = "RIGHT";
+            speed = initialSpeed; // 重置速度
             generateFood();
             gameInterval = setInterval(gameLoop, speed);
         }
