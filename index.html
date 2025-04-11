@@ -15,15 +15,28 @@
 
     <!-- 主畫面 -->
     <div id="mainMenu" class="view active">
-        <h1>遊戲中心</h1>
-        <p>選擇你想玩的遊戲</p>
+        <h1>米露游戲中心</h1>
+        <p>上面選擇你想玩的遊戲 (暫時得一樣) </p>
     </div>
 
     <!-- 貪食蛇遊戲畫面 -->
     <div id="snakeGame" class="view">
         <h1>貪食蛇 - 米食女</h1>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <button onclick="endGame()">結束遊戲</button>
+        <div id="gameModal">
+            <p>請輸入姓名：</p>
+            <input type="text" id="playerName" placeholder="輸入你的名字" />
+            <button id="startButton">開始遊戲</button>
+        </div>
+        <div id="endModal">
+            <p id="playerScoreTitle"></p>
+            <p id="playerScore"></p>
+            <p id="playerHighScoreTitle"></p>
+            <p id="playerHighScore"></p>
+            <p id="systemRecordTitle">系統最高(男同俱樂部成員)記錄：</p>
+            <p id="systemRecord">37 (11-4-2025 16:49)</p>
+            <button id="restartButton">再來一局</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
