@@ -142,7 +142,7 @@
     <div id="endModal">
         <p id="playerScore"></p>
         <p id="playerHighScore"></p>
-        <p>系統最高分數：37 (11-4-2025 21:49)</p>
+        <p>系統最高分數：37 (2025-4-11 16:49)</p>
         <button onclick="closeModal()">關閉</button>
     </div>
 
@@ -162,6 +162,7 @@
         let direction = "RIGHT";
         let score = 0;
         let highScore = 0;
+        let highScoreDate = ""; // 記錄最高分時間
         let speed = 150; // 初始速度（毫秒）
         const minSpeed = 50; // 最低速度
         let gameInterval = null;
@@ -252,7 +253,7 @@
 
         function increaseSpeed() {
             if (speed > minSpeed) {
-                speed -= 7.5; // 每次吃到食物減少速度
+                speed -= 10; // 每次吃到食物減少速度
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, speed);
             }
@@ -260,9 +261,16 @@
 
         function endGame() {
             clearInterval(gameInterval);
-            if (score > highScore) highScore = score;
+            const currentDate = new Date();
+            const formattedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()} ${currentDate.getHours()}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
+
+            if (score > highScore) {
+                highScore = score;
+                highScoreDate = formattedDate; // 更新最高分時間
+            }
+
             playerScoreText.textContent = `你的分數：${score}`;
-            playerHighScoreText.textContent = `你的最高分數：${highScore}`;
+            playerHighScoreText.textContent = `你的最高分數：${highScore} (${highScoreDate})`;
             endModal.style.display = "flex";
         }
 
@@ -276,6 +284,28 @@
             if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
             if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
             if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+        });
+
+        // 手機滑動控制
+        let touchStartX, touchStartY;
+        document.addEventListener("touchstart", (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener("touchend", (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 0 && direction !== "LEFT") direction = "RIGHT";
+                if (diffX < 0 && direction !== "RIGHT") direction = "LEFT";
+            } else {
+                if (diffY > 0 && direction !== "UP") direction = "DOWN";
+                if (diffY < 0 && direction !== "DOWN") direction = "UP";
+            }
         });
     </script>
 </body>
