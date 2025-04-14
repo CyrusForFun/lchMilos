@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>貪食蛇遊戲 - 米食女</title>
+    <title>米露link</title>
     <style>
         body {
             margin: 0;
@@ -122,9 +122,9 @@
 
     <!-- 遊戲畫面 -->
     <div id="gameView" class="view">
-        <h1>米食女✅ 20分送你利是</h1>
+        <h1>米食女✅ 10分送你利是</h1>
         <p id="score">分數：0</p>
-        <a id="specialLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">點擊了解更多</a>
+        <a id="specialLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">收錢link</a>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <button id="startGameButton" onclick="startGame()">開始遊戲</button>
     </div>
@@ -145,8 +145,8 @@
     <div id="endModal">
         <p id="playerScore"></p>
         <p id="playerHighScore"></p>
-        <p>系統最高分數：37 (2025-4-11 16:49)</p>
-        <a id="rewardLink" href="https://w.alipay.hk/s03/7jWO8gNEgI" target="_blank">恭喜你有20分 獎勵link</a>
+        <p>系統最高分數：38 (2025-4-14 12:49)</p>
+        <a id="rewardLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">10分 獎勵link</a>
         <button onclick="closeModal()">關閉</button>
     </div>
 
@@ -286,7 +286,7 @@
             playerHighScoreText.textContent = `你的最高分數：${highScore} (${highScoreDate})`;
 
             // 顯示獎勵連結
-            if (score >= 20) {
+            if (score >= 10) {
                 rewardLink.style.display = "block";
             } else {
                 rewardLink.style.display = "none";
