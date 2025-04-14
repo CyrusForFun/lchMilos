@@ -89,6 +89,16 @@
             margin: 10px 0;
             color: #333;
         }
+        #specialLink {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #4CAF50;
+            text-decoration: none;
+            display: none;
+        }
+        #specialLink:hover {
+            text-decoration: underline;
+        }
         #startGameButton {
             margin-top: 15px;
             padding: 10px 20px;
@@ -102,14 +112,6 @@
         #startGameButton:hover {
             background-color: #45a049;
         }
-        #contactView a {
-            color: #4CAF50;
-            text-decoration: none;
-            font-size: 18px;
-        }
-        #contactView a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -120,8 +122,9 @@
 
     <!-- 遊戲畫面 -->
     <div id="gameView" class="view">
-        <h1>貪食蛇❌ 米食女✅</h1>
+        <h1>米食女✅20分有獎</h1>
         <p id="score">分數：0</p>
+        <a id="specialLink" href="https://w.alipay.hk/s03/7jWO8gNEgI" target="_blank">點擊了解更多</a>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <button id="startGameButton" onclick="startGame()">開始遊戲</button>
     </div>
@@ -129,7 +132,7 @@
     <!-- 聯絡畫面 -->
     <div id="contactView" class="view">
         <h1>歡迎聯絡米露</h1>
-        <p>電話號碼：9209xxxx</p>
+        <p>電話號碼：92092437 </p>
         <p>
             Instagram: 
             <a href="https://www.instagram.com/miles.lch?igsh=MWh1bWhlNnlpMmc5aQ==" target="_blank">
@@ -143,6 +146,7 @@
         <p id="playerScore"></p>
         <p id="playerHighScore"></p>
         <p>系統最高分數：37 (2025-4-11 16:49)</p>
+        <a id="rewardLink" href="https://w.alipay.hk/s03/7jWO8gNEgI" target="_blank">恭喜你有20分 獎勵link</a>
         <button onclick="closeModal()">關閉</button>
     </div>
 
@@ -153,6 +157,7 @@
         const rows = canvas.width / boxSize;
         const cols = canvas.height / boxSize;
         const scoreElement = document.getElementById("score");
+        const specialLink = document.getElementById("specialLink");
         const endModal = document.getElementById("endModal");
         const playerScoreText = document.getElementById("playerScore");
         const playerHighScoreText = document.getElementById("playerHighScore");
@@ -181,6 +186,7 @@
             speed = 150; // 重置速度
             updateScore();
             generateFood();
+            specialLink.style.display = "none"; // 隱藏連結
             endModal.style.display = "none";
             clearInterval(gameInterval);
             gameInterval = setInterval(gameLoop, speed);
@@ -249,28 +255,43 @@
 
         function updateScore() {
             scoreElement.textContent = `分數：${score}`;
+            if (score >= 20) {
+                specialLink.style.display = "inline"; // 顯示連結
+            } else {
+                specialLink.style.display = "none"; // 隱藏連結
+            }
         }
 
         function increaseSpeed() {
             if (speed > minSpeed) {
-                speed -= 10; // 每次吃到食物減少速度
+                speed -= 7.5; // 每次吃到食物減少速度
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, speed);
             }
         }
 
+        // 遊戲結束
         function endGame() {
             clearInterval(gameInterval);
-            const currentDate = new Date();
-            const formattedDate = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${currentDate.getDate()} ${currentDate.getHours()}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
+
+            const date = new Date();
+            const formattedDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, "0")}`;
 
             if (score > highScore) {
                 highScore = score;
-                highScoreDate = formattedDate; // 更新最高分時間
+                highScoreDate = formattedDate;
             }
 
             playerScoreText.textContent = `你的分數：${score}`;
             playerHighScoreText.textContent = `你的最高分數：${highScore} (${highScoreDate})`;
+
+            // 顯示獎勵連結
+            if (score >= 5) {
+                rewardLink.style.display = "block";
+            } else {
+                rewardLink.style.display = "none";
+            }
+
             endModal.style.display = "flex";
         }
 
