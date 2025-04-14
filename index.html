@@ -122,7 +122,7 @@
 
     <!-- 遊戲畫面 -->
     <div id="gameView" class="view">
-        <h1>米食女✅20分有獎</h1>
+        <h1>米食女✅ 20分送你利是</h1>
         <p id="score">分數：0</p>
         <a id="specialLink" href="https://w.alipay.hk/s03/7jWO8gNEgI" target="_blank">點擊了解更多</a>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
@@ -286,7 +286,7 @@
             playerHighScoreText.textContent = `你的最高分數：${highScore} (${highScoreDate})`;
 
             // 顯示獎勵連結
-            if (score >= 5) {
+            if (score >= 20) {
                 rewardLink.style.display = "block";
             } else {
                 rewardLink.style.display = "none";
