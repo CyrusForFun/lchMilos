@@ -59,7 +59,7 @@
         .view.active {
             display: flex;
         }
-        #endModal, #winModal {
+        #endModal {
             display: none;
             position: fixed;
             top: 0;
@@ -73,19 +73,33 @@
             flex-direction: column;
             z-index: 1000;
         }
-        #endModal p, #winModal p {
+        #endModal p {
             font-size: 20px;
             margin: 10px 0;
         }
-        #winModal a {
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        #score {
             font-size: 18px;
+            margin: 10px 0;
+            color: #333;
+        }
+        #specialLink {
+            margin-top: 10px;
+            font-size: 16px;
             color: #4CAF50;
             text-decoration: none;
+            display: none;
         }
-        #winModal a:hover {
+        #specialLink:hover {
             text-decoration: underline;
         }
-        #startGameButton, #startStopButton {
+        #startGameButton {
             margin-top: 15px;
             padding: 10px 20px;
             font-size: 16px;
@@ -95,20 +109,20 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #startGameButton:hover, #startStopButton:hover {
+        #startGameButton:hover {
             background-color: #45a049;
         }
     </style>
 </head>
 <body>
     <div id="navbar">
-        <button onclick="switchView('gameView')">米食</button>
+        <button onclick="switchView('gameView')">米食女</button>
         <button onclick="switchView('contactView')">聯絡米露</button>
         <button onclick="switchView('timeStopView')">米停</button>
     </div>
 
-    <!-- 米食遊戲 -->
-    <div id="gameView" class="view active">
+    <!-- 遊戲畫面 -->
+    <div id="gameView" class="view">
         <h1>米食女✅ 10分送你利是</h1>
         <p id="score">分數：0</p>
         <a id="specialLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">收錢link</a>
@@ -116,7 +130,7 @@
         <button id="startGameButton" onclick="startGame()">開始遊戲</button>
     </div>
 
-    <!-- 聯絡米露 -->
+    <!-- 聯絡畫面 -->
     <div id="contactView" class="view">
         <h1>歡迎聯絡米露</h1>
         <p>電話號碼：92092437 </p>
@@ -127,84 +141,12 @@
             </a>
         </p>
     </div>
-
-    <!-- 時間停止遊戲 -->
+    
     <div id="timeStopView" class="view">
         <h1>時間停止遊戲</h1>
         <p>挑戰規則：在 9.58 秒時停止計時！</p>
         <p id="timerDisplay">時間：0.00 秒</p>
         <button id="startStopButton" onclick="handleTimeStop()">開始</button>
-    </div>
-
-    <!-- 勝利彈窗 -->
-    <div id="winModal">
-        <p>恭喜你成功挑戰完成！</p>
-        <a href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">點擊領取勝利獎勵</a>
-        <button onclick="closeWinModal()">關閉</button>
-    </div>
-
-    <!-- 米食結束彈窗 -->
-    <div id="endModal">
-        <p id="playerScore"></p>
-        <p id="playerHighScore"></p>
-        <p>系統最高分數：38 (2025-4-14 12:49)</p>
-        <a id="rewardLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">10分 獎勵link</a>
-        <button onclick="closeModal()">關閉</button>
-    </div>
-
-    <script>
-        // 切換視圖
-        function switchView(viewId) {
-            document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
-            document.getElementById(viewId).classList.add("active");
-        }
-
-        // ================== 時間停止遊戲邏輯 ==================
-        let timer = 0;
-        let timerInterval = null;
-        let isTimerRunning = false;
-
-        const timerDisplay = document.getElementById("timerDisplay");
-        const startStopButton = document.getElementById("startStopButton");
-        const winModal = document.getElementById("winModal");
-
-        // 處理時間停止遊戲的開始和停止
-        function handleTimeStop() {
-            if (!isTimerRunning) {
-                // 開始計時
-                isTimerRunning = true;
-                timer = 0;
-                startStopButton.textContent = "停止";
-                timerInterval = setInterval(() => {
-                    timer += 0.01;
-                    timerDisplay.textContent = `時間：${timer.toFixed(2)} 秒`;
-                }, 10);
-            } else {
-                // 停止計時
-                isTimerRunning = false;
-                clearInterval(timerInterval);
-                const roundedTime = Math.round(timer * 100) / 100; // 四捨五入到兩位小數
-                if (roundedTime === 9.58) {
-                    // 成功挑戰
-                    winModal.style.display = "flex";
-                } else {
-                    // 失敗，允許重新開始
-                    alert(`挑戰失敗！你的時間是：${roundedTime} 秒`);
-                }
-                startStopButton.textContent = "重新開始";
-            }
-        }
-
-        // 關閉勝利彈窗
-        function closeWinModal() {
-            winModal.style.display = "none";
-            switchView('timeStopView');
-        }
-    <!-- 新遊戲畫面 -->
-    <div id="newGameView" class="view">
-        <h1>新遊戲畫面</h1>
-        <p>這是新遊戲的內容！</p>
-        <button onclick="alert('新遊戲開始！')">開始新遊戲</button>
     </div>
 
     <!-- 遊戲結束彈窗 -->
@@ -244,6 +186,36 @@
             document.getElementById(viewId).classList.add("active");
         }
 
+        let timer = 0;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        const timerDisplay = document.getElementById("timerDisplay");
+        const startStopButton = document.getElementById("startStopButton");
+        const winModal = document.getElementById("winModal");
+
+        function handleTimeStop() {
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                timer = 0;
+                startStopButton.textContent = "停止";
+                timerInterval = setInterval(() => {
+                    timer += 0.001;
+                    timerDisplay.textContent = `時間：${timer.toFixed(3)} 秒`;
+                }, 10);
+            } else {
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                const roundedTime = Math.round(timer * 100) / 100;
+                if (roundedTime === 9.588) {
+                    winModal.style.display = "flex";
+                } else {
+                    alert(`挑戰失敗！你的時間是：${roundedTime} 秒`);
+                }
+                startStopButton.textContent = "重新開始";
+            }
+        }
+        
         // 遊戲邏輯
         function startGame() {
             snake = [{ x: 10, y: 10 }];
