@@ -116,12 +116,13 @@
 </head>
 <body>
     <div id="navbar">
-        <button onclick="switchView('gameView')">米食女</button>
+        <button onclick="switchView('gameView')">米食</button>
         <button onclick="switchView('contactView')">聯絡米露</button>
+        <button onclick="switchView('timeStopView')">米停</button>
     </div>
 
     <!-- 遊戲畫面 -->
-    <div id="gameView" class="view">
+    <div id="gameView" class="view active">
         <h1>米食女✅ 10分送你利是</h1>
         <p id="score">分數：0</p>
         <a id="specialLink" href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">收錢link</a>
@@ -139,6 +140,75 @@
                 https://www.instagram.com/miles.lch?igsh=MWh1bWhlNnlpMmc5aQ==
             </a>
         </p>
+    </div>
+    <!-- 時間停止遊戲 -->
+    <div id="timeStopView" class="view">
+        <h1>時間停止遊戲</h1>
+        <p>挑戰規則：在 9.58 秒時停止計時！</p>
+        <p id="timerDisplay">時間：0.00 秒</p>
+        <button id="startStopButton" onclick="handleTimeStop()">開始</button>
+    </div>
+
+    <!-- 勝利彈窗 -->
+    <div id="winModal">
+        <p>恭喜你成功挑戰完成！</p>
+        <a href="https://w.alipay.hk/s03/QG5daPgpwI" target="_blank">點擊領取勝利獎勵</a>
+        <button onclick="closeWinModal()">關閉</button>
+    </div>
+
+    <script>
+        // 切換視圖
+        function switchView(viewId) {
+            document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+            document.getElementById(viewId).classList.add("active");
+        }
+
+        // ================== 時間停止遊戲邏輯 ==================
+        let timer = 0;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        const timerDisplay = document.getElementById("timerDisplay");
+        const startStopButton = document.getElementById("startStopButton");
+        const winModal = document.getElementById("winModal");
+
+        // 處理時間停止遊戲的開始和停止
+        function handleTimeStop() {
+            if (!isTimerRunning) {
+                // 開始計時
+                isTimerRunning = true;
+                timer = 0;
+                startStopButton.textContent = "停止";
+                timerInterval = setInterval(() => {
+                    timer += 0.01;
+                    timerDisplay.textContent = `時間：${timer.toFixed(2)} 秒`;
+                }, 10);
+            } else {
+                // 停止計時
+                isTimerRunning = false;
+                clearInterval(timerInterval);
+                const roundedTime = Math.round(timer * 100) / 100; // 四捨五入到兩位小數
+                if (roundedTime === 9.58) {
+                    // 成功挑戰
+                    winModal.style.display = "flex";
+                } else {
+                    // 失敗，允許重新開始
+                    alert(`挑戰失敗！你的時間是：${roundedTime} 秒`);
+                }
+                startStopButton.textContent = "重新開始";
+            }
+        }
+
+        // 關閉勝利彈窗
+        function closeWinModal() {
+            winModal.style.display = "none";
+            switchView('timeStopView');
+        }
+    <!-- 新遊戲畫面 -->
+    <div id="newGameView" class="view">
+        <h1>新遊戲畫面</h1>
+        <p>這是新遊戲的內容！</p>
+        <button onclick="alert('新遊戲開始！')">開始新遊戲</button>
     </div>
 
     <!-- 遊戲結束彈窗 -->
